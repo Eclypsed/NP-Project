@@ -5,13 +5,19 @@
 
 {
   # https://devenv.sh/packages/
-  packages = with pkgs; [ git ];
+  packages = with pkgs; [
+    git
+    raylib
+  ];
 
   # https://devenv.sh/languages/
-  languages.python = {
-    enable = true;
-    venv = {
+  languages = {
+    c.enable = true;
+    python = {
       enable = true;
+      venv = {
+        enable = true;
+      };
     };
   };
 
