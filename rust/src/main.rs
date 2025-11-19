@@ -104,6 +104,7 @@ fn main() {
         let v_id = add_vertex(v);
 
         graph.entry(u_id).or_default().insert(v_id, w);
+        graph.entry(v_id).or_default().insert(u_id, w);
     }
 
     let graph: Arc<Graph> = Arc::new(graph);

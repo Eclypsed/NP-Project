@@ -63,6 +63,7 @@ def main():
 
         weight = float(w)
 
+        graph[vertex_map[v]][vertex_map[u]] = weight
         graph[vertex_map[u]][vertex_map[v]] = weight
 
     path, weight = longest_path(n, graph)
