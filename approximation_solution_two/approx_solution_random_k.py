@@ -33,11 +33,13 @@ def approx_solution(graph , k=3, start_k=5):
     neighbor = start_edge[1]
     weight = start_edge[2]
 
-    visited_edges = set()
+    visited_vertices = set()
     
     # Add the starting edge to path
-    visited_edges.add((current, neighbor))
-    final_path.append((current, neighbor))
+    visited_vertices.add(current)
+    visited_vertices.add(neighbor)
+    final_path.append(current)
+    final_path.append(neighbor)
     total_weight += weight
 
     # Move to the neighbor node
@@ -49,7 +51,7 @@ def approx_solution(graph , k=3, start_k=5):
         candidates = []
 
         for nbr in graph[current]:
-            if (current, nbr) not in visited_edges:
+            if nbr not in visited_vertices:
                 weight = graph[current][nbr]
                 candidates.append((nbr, weight))
 
@@ -67,8 +69,9 @@ def approx_solution(graph , k=3, start_k=5):
         neighbor, weight = random.choice(top_k)
 
         # add the chosen edge to final path, mark as visited, and add weight to total_weight
-        visited_edges.add((current, neighbor))
-        final_path.append((current, neighbor))
+        visited_vertices.add(neighbor)
+        final_path.append(neighbor)
+
         total_weight += weight
 
         # move to the next node
@@ -91,23 +94,16 @@ def main():
 
         if u not in graph:
             graph[u] = {}
-
-        graph[u][v] = w
-
         if v not in graph:
             graph[v] = {}
+
+        graph[u][v] = w
+        graph[v][u] = w
 
     total_weight, final_path = approx_solution(graph)
     print(f"{total_weight}")
     
-    if final_path:
-        vertices = [final_path[0][0]]
-        for edge in final_path:
-            vertices.append(edge[1])
-        print(" ".join(vertices))
-    else:
-        print("")
-
+    print(" ".join(final_path))
 
 if __name__ == "__main__":
     main()
