@@ -1,100 +1,43 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
 #include <time.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "graph.h"
 
-#define MAX_TIME 2.5
+static inline uint32_t prng(void) { return rand(); }
+static inline float frand(void) { return (float)prng() / (float)RAND_MAX; }
+static inline double now(void) { return (double)clock() / CLOCKS_PER_SEC; }
+static inline char *shift(int *argc, char ***argv) {
+    if (*argc == 0)
+        return NULL;
 
-#define NOW() ({ \
-        struct timespec ts__; \
-        clock_gettime(CLOCK_MONOTONIC, &ts__); \
-        ts__.tv_sec + ts__.tv_nsec / 1e9; \
-        })
+    char *arg = **argv;
+    (*argv)++;
+    (*argc)--;
+    return arg;
+}
 
+// DEFAULTS
+static double MAX_TIME = 60;
+static float JUMP_PROB = 0.15f;
+static int WALK_STEPS = 10;
 
-static float longest_path_greedy(graph *g, size_t start,
-        size_t *out_path, size_t *out_len)
+// Forward declarations
+static void collect_moves(graph *, size_t, int *, edge **, size_t *, edge **, size_t *);
+static edge *choose_edge(edge **, size_t, edge **, size_t);
+static float random_walk(graph *, size_t *, int *, size_t *, size_t *);
+static float sample_path(graph *, size_t, size_t *, size_t *);
+static void run_sim(graph *);
+void handle_args(int *, char ***);
+
+// Entry
+int main(int argc, char** argv)
 {
-    int *visited = calloc(g->n, sizeof(int));
-    size_t *path = out_path;
-    size_t len = 0;
+    handle_args(&argc, &argv);
 
-    size_t current = start;
-    visited[current] = 1;
-    path[len++] = current;
-
-    float total = 0.0f;
-
-    while (1) {
-        edge *best = NULL;
-
-        for (edge *e = g->adj[current]; e; e = e->next) {
-            if (!visited[e->to]) {
-                if (!best || e->weight > best->weight) {
-                    best = e;
-                }
-            }
-        }
-
-        if (!best)
-            break;
-
-        total += best->weight;
-        current = best->to;
-        visited[current] = 1;
-        path[len++] = current;
-    }
-
-    *out_len = len;
-    free(visited);
-    return total;
-}
-
-static void run_sim(graph *g) {
-    size_t *path = malloc(g->n * sizeof(size_t));
-    size_t *best_path = malloc(g->n * sizeof(size_t));
-    size_t best_len = 0;
-
-    float best_weight = -FLT_MAX;
-    int improved = 1;
-
-    double start_time = NOW();
-
-    while (NOW() - start_time < MAX_TIME && improved) {
-        improved = 0;
-
-        for (size_t i = 0; i < g->n; i++) {
-            size_t len;
-            float w = longest_path_greedy(g, i, path, &len);
-
-            if (w > best_weight) {
-                best_weight = w;
-                best_len = len;
-
-                for (size_t k = 0; k < len; k++)
-                    best_path[k] = path[k];
-
-                improved = 1;
-            }
-        }
-    }
-
-    printf("%.0f\n", best_weight);
-    for (size_t i = 0; i < best_len; i++) {
-        printf("%s%s", g->names[best_path[i]],
-                (i + 1 < best_len) ? " " : "");
-    }
-    printf("\n");
-
-    free(path);
-    free(best_path);
-}
-
-int main(void) {
     graph *g = graph_read();
     if (!g) {
         fprintf(stderr, "Failed to read graph.\n");
@@ -102,7 +45,193 @@ int main(void) {
     }
 
     run_sim(g);
+
     graph_free(g);
     return 0;
 }
 
+// Collect unvisited neighbors and identify the best-weight ones for greedy selection.
+static void collect_moves(graph *g, size_t current, int *visited, edge **neighbors, size_t *neighbor_count, edge **best_edges, size_t *best_edge_count) {
+    float best_w = -1.0f;
+    *neighbor_count = 0;
+    *best_edge_count = 0;
+
+    for (edge *e = g->adj[current]; e; e = e->next) {
+        if (!visited[e->to]) {
+            neighbors[(*neighbor_count)++] = e;
+
+            if (e->weight > best_w) {
+                best_w = e->weight;
+                *best_edge_count = 1;
+                best_edges[0] = e;
+            } else if (e->weight == best_w) {
+                best_edges[(*best_edge_count)++] = e;
+            }
+        }
+    }
+}
+
+// Choose the next move: random jump or a random pick among best-weight edges.
+static edge *choose_edge(edge **neighbors, size_t neighbor_count, edge **best_edges, size_t best_edge_count) {
+    if (best_edge_count == 0)
+        return NULL;
+
+    /* Random jump to any edge */
+    if (neighbor_count > 1 && frand() < JUMP_PROB)
+        return neighbors[prng() % neighbor_count];
+
+    /* Otherwise choose randomly among best edges */
+    return best_edges[prng() % best_edge_count];
+}
+
+// Extend the path by taking up to WALK_STEPS random unvisited neighbors after greedy gets stuck.
+static float random_walk(graph *g, size_t *current, int *visited, size_t *path, size_t *len)
+{
+    float total = 0.0f;
+    edge **candidates = (edge**) calloc(g->n, sizeof(edge*));
+    if (!candidates){
+        fprintf(stderr, "Failed to allocate candidates edge array in random_walk\n");
+        exit(1);
+    }
+
+    for (int step = 0; step < WALK_STEPS; step++) {
+
+        size_t candidate_count = 0;
+
+        for (edge *e = g->adj[*current]; e; e = e->next) {
+            if (!visited[e->to]) {
+                candidates[candidate_count++] = e;
+            }
+        }
+
+        if (candidate_count == 0) break;
+
+        edge *chosen = candidates[prng() % candidate_count];
+
+        total += chosen->weight;
+        *current = chosen->to;
+        visited[*current] = 1;
+        path[(*len)++] = *current;    
+    }
+
+    free(candidates);
+    return total;
+}
+
+// Build a single randomized greedy path with jumps and a random-walk extension, returning its total weight.
+static float sample_path(graph *g, size_t start, size_t *path, size_t *out_len)
+{
+    int *visited = calloc(g->n, sizeof(int));
+    if (!visited) {
+        fprintf(stderr, "Error: Failed to allocate visited array\n");
+        exit(1);
+    }
+
+    size_t len = 0;
+    size_t current = start;
+    visited[current] = 1;
+    path[len++] = current;
+
+    float total = 0.0f;
+
+    edge **neighbors = (edge**) calloc(g->n, sizeof(edge*));
+    edge **best_edges = (edge**) calloc(g->n, sizeof(edge*));
+    if (!neighbors || !best_edges) {
+        fprintf(stderr, "Error: Failed to allocate edge arrays\n");
+        free(visited);
+        free(neighbors);
+        free(best_edges);
+        exit(1);
+    }
+    size_t neighbor_count, best_edge_count;
+
+    // Main greedy loop with random jumps
+    while (1) {
+        collect_moves(g, current, visited, neighbors, &neighbor_count, best_edges, &best_edge_count);
+
+        if (best_edge_count == 0) break;
+
+        edge *chosen = choose_edge(neighbors, neighbor_count, best_edges, best_edge_count);
+        if (!chosen) break;
+
+        total += chosen->weight;
+        current = chosen->to;
+        visited[current] = 1;
+        path[len++] = current;
+    }
+
+    // Extend with random walk
+    total += random_walk(g, &current, visited, path, &len);
+
+    free(visited);
+    free(neighbors);
+    free(best_edges);
+    *out_len = len;
+    return total;
+}
+
+// Repeatedly sample random paths within the time limit and keep the highest-weight one found.
+static void run_sim(graph *g)
+{
+    size_t *path = (size_t*) calloc(g->n, sizeof(size_t));
+    size_t *best_path = (size_t*) calloc(g->n, sizeof(size_t));
+
+    if (!path || !best_path) {
+        fprintf(stderr, "Error: Failed to allocate path arrays\n");
+        free(path);
+        free(best_path);
+        exit(1);
+    }
+
+    size_t best_len = 0;
+    float best_weight = -1.0f;
+
+    double start = now();
+
+    while (now() - start < MAX_TIME) {
+        size_t start_node = prng() % g->n;
+
+        size_t len;
+        float w = sample_path(g, start_node, path, &len);
+
+        if (w > best_weight) {
+            best_weight = w;
+            best_len = len;
+            for (size_t i = 0; i < len; i++)
+                best_path[i] = path[i];
+        }
+    }
+
+    printf("%.0f\n", best_weight);
+    for (size_t i = 0; i < best_len; i++) {
+        printf("%s%s", g->names[best_path[i]], (i + 1 < best_len) ? " " : "");
+    }
+    printf("\n");
+
+    free(path);
+    free(best_path);
+}
+
+void handle_args(int* argc, char*** argv){
+    char *program = shift(argc, argv);
+    printf("%s\n", program);
+
+    while (*argc > 0) {
+        char *arg = shift(argc, argv);
+
+        if (strcmp(arg, "--time") == 0) {
+            if (*argc > 0) {
+                char *next = (*argv)[0];
+                char *end;
+
+                float val = strtof(next, &end);
+
+                if (end != next) {
+                    MAX_TIME = val;
+                    shift(argc, argv);
+                }
+            }
+            continue;
+        }
+    }
+}
