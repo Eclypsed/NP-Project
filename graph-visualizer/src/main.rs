@@ -1,58 +1,125 @@
 mod graph_io;
 mod longest_path;
 
-use petgraph::{Graph, Undirected, graph::EdgeIndex};
+use anyhow::Result;
+use petgraph::{Directed, EdgeType, Undirected};
 use std::{
+    fs,
     io::{self, BufRead},
-    sync::Arc,
-    thread::{self, JoinHandle},
+    path::PathBuf,
 };
-use visgraph::{Layout, graph_to_svg, settings::SettingsBuilder};
 
-fn main() {
-    let mut lines = io::stdin().lock().lines();
+use clap::{Args, Parser, Subcommand};
 
-    let line1 = lines
-        .next()
-        .and_then(|l| l.ok())
-        .expect("Failed to read line");
+#[derive(Parser)]
+struct Cli {
+    #[arg(global = true, long)]
+    directed: bool,
 
-    let mut nums = line1
-        .split_whitespace()
-        .take(2)
-        .map(|s| s.parse::<usize>().expect("Failed to parse number"));
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    let n = nums.next().expect("Missing n");
-    let m = nums.next().expect("Missing m");
+#[derive(Subcommand, Debug)]
+enum Commands {
+    LongestPath(LongestPathArgs),
+    Render(RenderArgs),
+}
 
-    let graph: Graph<String, f64, Undirected> = graph_io::read_graph(lines, n, m);
+#[derive(Args, Debug)]
+struct LongestPathArgs {
+    graph: PathBuf,
 
-    let graph_m = Arc::new(graph.clone());
-    let mut threads: Vec<JoinHandle<(Vec<EdgeIndex>, f64)>> = Vec::with_capacity(n);
+    #[arg(long, default_value_t = false)]
+    multithread: bool,
+}
 
-    for start in graph_m.node_indices() {
-        let graph_m = Arc::clone(&graph_m);
-        let handle = thread::spawn(move || longest_path::longest_from_start(start, &graph_m));
-        threads.push(handle);
-    }
+#[derive(Args, Debug)]
+struct RenderArgs {
+    graph: PathBuf,
 
-    let (path, weight) = threads
-        .into_iter()
-        .map(|h| h.join().unwrap())
-        .max_by(|(_, w1), (_, w2)| w1.partial_cmp(w2).unwrap())
-        .unwrap();
+    #[arg(long, default_value_t = false)]
+    repeat: bool,
+}
 
-    let (node_coloring, edge_coloring) = graph_io::path_highlighter(&path, &graph);
+fn run_longest_path<T>(LongestPathArgs { graph, multithread }: LongestPathArgs)
+where
+    T: EdgeType + Send + Sync + 'static,
+{
+    let content = fs::read_to_string(graph).unwrap();
+    let mut lines = content.lines().map(|s| s.to_string());
 
-    // lp_030 gives a good visual
-    let settings = SettingsBuilder::new()
-        .layout(Layout::Circular)
-        .edge_coloring_fn(edge_coloring)
-        .node_coloring_fn(node_coloring)
-        .build()
-        .unwrap();
+    let graph = graph_io::read_graph::<String, f64, T>(&mut lines);
 
-    let _ = graph_to_svg(&graph, &settings, "test.svg");
+    let (path, weight) = longest_path::longest_path(&graph, multithread);
+
+    let path_str = graph_io::edge_path_to_nodes(&path, &graph)
+        .iter()
+        .map(|n| graph[*n].clone())
+        .collect::<Vec<String>>()
+        .join(" ");
 
     println!("{weight}");
+    println!("{path_str}");
+}
+
+fn run_render<T: EdgeType>(RenderArgs { graph, repeat }: RenderArgs) -> Result<()> {
+    let content = fs::read_to_string(graph)?;
+    let mut lines = content.lines().map(|s| s.to_string());
+
+    let graph = graph_io::read_graph::<String, f64, T>(&mut lines);
+
+    let mut stdin = io::stdin().lock().lines();
+
+    let mut read_and_render = |filename: &str| -> Result<()> {
+        let _ = stdin.next().ok_or(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "Failed to read weight line",
+        ))??;
+        // let weight = weight_line.trim().parse::<usize>()?;
+
+        let vertices_line = stdin.next().ok_or(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "Failed to read path line",
+        ))??;
+        let vertices: Vec<String> = vertices_line
+            .split_whitespace()
+            .map(|s| s.to_string())
+            .collect();
+
+        let path = graph_io::parse_path(&vertices, &graph)?;
+
+        graph_io::draw_graph(&path, &graph, filename);
+
+        Ok(())
+    };
+
+    if !repeat {
+        read_and_render("render.svg")?;
+        return Ok(());
+    }
+
+    let mut index = 0u64;
+    loop {
+        let filename = format!("render_{:05}.svg", index);
+        read_and_render(filename.as_str())?;
+        index += 1;
+    }
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::LongestPath(args) => match cli.directed {
+            true => run_longest_path::<Directed>(args),
+            false => run_longest_path::<Undirected>(args),
+        },
+        Commands::Render(args) => match cli.directed {
+            true => run_render::<Directed>(args)?,
+            false => run_render::<Undirected>(args)?,
+        },
+    };
+
+    Ok(())
 }
