@@ -13,8 +13,13 @@ use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
 struct Cli {
+    /// Optionally interpret the graph as directed instead of undirected
     #[arg(global = true, long)]
     directed: bool,
+
+    /// The file path of the graph to use
+    #[arg()]
+    graph: PathBuf,
 
     #[command(subcommand)]
     command: Commands,
@@ -22,104 +27,99 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    /// Calculate the longest path in the graph
     LongestPath(LongestPathArgs),
+    /// Read a weight & path from stdin and render the graph with the path highlighted
     Render(RenderArgs),
 }
 
 #[derive(Args, Debug)]
 struct LongestPathArgs {
-    graph: PathBuf,
-
+    /// Parallelize the computation
     #[arg(long, default_value_t = false)]
     multithread: bool,
 }
 
 #[derive(Args, Debug)]
 struct RenderArgs {
-    graph: PathBuf,
-
+    /// Repeatedly read and render multiple paths from stdin
     #[arg(long, default_value_t = false)]
     repeat: bool,
 }
 
-fn run_longest_path<T>(LongestPathArgs { graph, multithread }: LongestPathArgs)
+fn command_runner<T>(graph_path: PathBuf, command: Commands) -> Result<()>
 where
     T: EdgeType + Send + Sync + 'static,
 {
-    let content = fs::read_to_string(graph).unwrap();
+    let content = fs::read_to_string(graph_path)?;
     let mut lines = content.lines().map(|s| s.to_string());
 
     let graph = graph_io::read_graph::<String, f64, T>(&mut lines);
 
-    let (path, weight) = longest_path::longest_path(&graph, multithread);
+    match command {
+        Commands::LongestPath(LongestPathArgs { multithread }) => {
+            let (path, weight) = longest_path::longest_path(&graph, multithread);
 
-    let path_str = graph_io::edge_path_to_nodes(&path, &graph)
-        .iter()
-        .map(|n| graph[*n].clone())
-        .collect::<Vec<String>>()
-        .join(" ");
+            let path_str = graph_io::edge_path_to_nodes(&path, &graph)
+                .iter()
+                .map(|n| graph[*n].clone())
+                .collect::<Vec<String>>()
+                .join(" ");
 
-    println!("{weight}");
-    println!("{path_str}");
-}
+            println!("{weight}");
+            println!("{path_str}");
+        }
+        Commands::Render(RenderArgs { repeat }) => {
+            let mut stdin = io::stdin().lock().lines();
 
-fn run_render<T: EdgeType>(RenderArgs { graph, repeat }: RenderArgs) -> Result<()> {
-    let content = fs::read_to_string(graph)?;
-    let mut lines = content.lines().map(|s| s.to_string());
+            let read_and_render = |path_line: &str, filename: &str| -> Result<()> {
+                let vertices: Vec<String> = path_line
+                    .split_whitespace()
+                    .map(|s| s.to_string())
+                    .collect();
 
-    let graph = graph_io::read_graph::<String, f64, T>(&mut lines);
+                let path = graph_io::parse_path(&vertices, &graph)?;
 
-    let mut stdin = io::stdin().lock().lines();
+                graph_io::draw_graph(&path, &graph, filename);
 
-    let mut read_and_render = |filename: &str| -> Result<()> {
-        let _ = stdin.next().ok_or(io::Error::new(
-            io::ErrorKind::UnexpectedEof,
-            "Failed to read weight line",
-        ))??;
-        // let weight = weight_line.trim().parse::<usize>()?;
+                Ok(())
+            };
 
-        let vertices_line = stdin.next().ok_or(io::Error::new(
-            io::ErrorKind::UnexpectedEof,
-            "Failed to read path line",
-        ))??;
-        let vertices: Vec<String> = vertices_line
-            .split_whitespace()
-            .map(|s| s.to_string())
-            .collect();
+            if !repeat {
+                let _ = stdin.next().ok_or(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    "Failed to read weight line",
+                ))??;
+                // let weight = weight_line.trim().parse::<usize>()?;
 
-        let path = graph_io::parse_path(&vertices, &graph)?;
+                let vertices_line = stdin.next().ok_or(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    "Failed to read path line",
+                ))??;
 
-        graph_io::draw_graph(&path, &graph, filename);
+                read_and_render(&vertices_line, "render.svg")?;
+                return Ok(());
+            }
 
-        Ok(())
-    };
+            let mut index = 0u64;
 
-    if !repeat {
-        read_and_render("render.svg")?;
-        return Ok(());
+            while let (Some(_), Some(vertices_line)) = (stdin.next(), stdin.next()) {
+                let path_line = vertices_line?;
+                let filename = format!("render_{:05}.svg", index);
+                read_and_render(&path_line, filename.as_str())?;
+                index += 1;
+            }
+        }
     }
 
-    let mut index = 0u64;
-    loop {
-        let filename = format!("render_{:05}.svg", index);
-        read_and_render(filename.as_str())?;
-        index += 1;
-    }
+    Ok(())
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    match cli.command {
-        Commands::LongestPath(args) => match cli.directed {
-            true => run_longest_path::<Directed>(args),
-            false => run_longest_path::<Undirected>(args),
-        },
-        Commands::Render(args) => match cli.directed {
-            true => run_render::<Directed>(args)?,
-            false => run_render::<Undirected>(args)?,
-        },
-    };
-
-    Ok(())
+    match cli.directed {
+        true => command_runner::<Directed>(cli.graph, cli.command),
+        false => command_runner::<Undirected>(cli.graph, cli.command),
+    }
 }
