@@ -10,7 +10,7 @@ else
     SEP    := /
 endif
 
-CC       := cc
+CC       := gcc
 CFLAGS   := -O3 -Wall -Wextra -std=c99
 LDFLAGS  :=
 LDLIBS   := -lrt
