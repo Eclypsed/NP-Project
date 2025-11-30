@@ -17,6 +17,9 @@
       enable = true;
       venv = {
         enable = true;
+        requirements = ''
+          click==8.3.1
+        '';
       };
     };
     rust.enable = true;

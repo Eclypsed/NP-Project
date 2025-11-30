@@ -1,17 +1,24 @@
+import time
 from collections import defaultdict
 from functools import reduce
+
+import click
 
 type Graph = dict[int, dict[int, float]]
 
 
-def longest_path(n: int, graph: Graph) -> tuple[list[int], float]:
+def longest_path(
+    n: int, graph: Graph, timeout: float | None
+) -> tuple[list[int], float]:
+
+    end_time = time.time() + timeout if timeout is not None else None
 
     def recurse(
         start: int, weight: float, visited: list[bool]
     ) -> tuple[list[int], float]:
         visited[start] = True
 
-        if start not in graph:
+        if (end_time is not None and time.time() >= end_time) or (start not in graph):
             return ([start], weight)
 
         best_path: list[int] = [start]
@@ -38,7 +45,14 @@ def longest_path(n: int, graph: Graph) -> tuple[list[int], float]:
     )
 
 
-def main():
+@click.command()
+@click.option(
+    "--timeout",
+    "-t",
+    type=float,
+    help="An optional maximum time for the program to run (seconds)",
+)
+def main(timeout: float | None):
     first_line = input().split()
     n = int(first_line[0])
     m = int(first_line[1])
@@ -66,7 +80,7 @@ def main():
         graph[vertex_map[v]][vertex_map[u]] = weight
         graph[vertex_map[u]][vertex_map[v]] = weight
 
-    path, weight = longest_path(n, graph)
+    path, weight = longest_path(n, graph, timeout)
 
     print(weight)
     print(" ".join(map(lambda id: vertices[id], path)))
