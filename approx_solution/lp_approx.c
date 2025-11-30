@@ -213,9 +213,7 @@ static void run_sim(graph *g)
 }
 
 void handle_args(int* argc, char*** argv){
-    char *program = shift(argc, argv);
-    printf("%s\n", program);
-
+    char *__attribute__((unused))program = shift(argc, argv);
     while (*argc > 0) {
         char *arg = shift(argc, argv);
 
