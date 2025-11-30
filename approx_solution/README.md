@@ -93,7 +93,7 @@ This approximation solution uses a randomized greedy approach with three key com
 
 ## Test Cases
 
-The [run_test_cases.sh](./run_test_cases.sh) script will run and time all three implementations on a subset of test cases from the [test cases folder](../test_cases). Below are results from running this script with a 01 second time limit per test:
+The [run_test_cases.sh](./run_test_cases.sh) script will run and time all three implementations on a subset of test cases from the [test cases folder](../test_cases). Below are results from running this script with a 1 second time limit per test:
 
 | Test Case | Vertices | Edges | Weight - C | Time - C | Weight - Python Wrapper | Time - Python Wrapper | Weight - Python Standalone | Time - Python Standalone |
 |-----------|----------|-------|------------|----------|-------------------------|------------------------|---------------------------|--------------------------|
