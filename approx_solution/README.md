@@ -11,8 +11,10 @@ A C and Python solution for approximating the longest path in a weighted graph u
 - `hashmap.h` STB-style header only lib
 
 ### Python Implementation
-Python 3+
-This solution has no external dependencies and uses only the Python standard library
+This solution's dependencies can be fond in the
+[requirements.txt](./requirements.txt). For easiest setup, use the Nix devenv.
+Otherwise you can set up a python virtual environment and install the
+dependencies:
 
 ### Gradescope
 
