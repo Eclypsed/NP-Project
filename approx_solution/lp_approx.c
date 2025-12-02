@@ -186,9 +186,9 @@ static void run_sim(graph *g)
     size_t best_len = 0;
     float best_weight = -1.0f;
 
-    double start = now();
+    double last_improve_time = now();
 
-    while (now() - start < MAX_TIME) {
+    while (now() - last_improve_time < MAX_TIME) {
         size_t start_node = prng() % g->n;
 
         size_t len;
@@ -197,20 +197,24 @@ static void run_sim(graph *g)
         if (w > best_weight) {
             best_weight = w;
             best_len = len;
+
             for (size_t i = 0; i < len; i++)
                 best_path[i] = path[i];
+
+            last_improve_time = now();
         }
     }
 
+    // Output result
     printf("%.0f\n", best_weight);
-    for (size_t i = 0; i < best_len; i++) {
+    for (size_t i = 0; i < best_len; i++)
         printf("%s%s", g->names[best_path[i]], (i + 1 < best_len) ? " " : "");
-    }
     printf("\n");
 
     free(path);
     free(best_path);
 }
+
 
 void handle_args(int* argc, char*** argv){
     char *__attribute__((unused))program = shift(argc, argv);
