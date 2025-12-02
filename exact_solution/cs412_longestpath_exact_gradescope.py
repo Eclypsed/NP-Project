@@ -2,9 +2,7 @@ from collections import defaultdict
 from functools import reduce
 
 
-def longest_path(
-    n: int, graph: dict[int, dict[int, float]]
-) -> tuple[list[int], float]:
+def longest_path(n: int, graph: dict[int, dict[int, float]]) -> tuple[list[int], float]:
 
     def recurse(
         start: int, weight: float, visited: list[bool]
@@ -28,7 +26,8 @@ def longest_path(
 
             if new_weight > best_weight:
                 best_weight = new_weight
-                best_path = [start, *new_path]
+                new_path.insert(0, start)
+                best_path = new_path
 
         return (best_path, best_weight)
 
