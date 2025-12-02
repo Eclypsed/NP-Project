@@ -19,6 +19,7 @@ TEST_CASES=(
     "lp_135.txt"
     "lp_151.txt"
     "lp_108.txt" 
+    "lp_badcase.txt"
 )
 
 TIME=0.5 # Can be changed
