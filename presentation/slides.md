@@ -5,6 +5,10 @@ _class: lead
 paginate: true
 backgroundColor: #fff
 backgroundImage: url('https://marp.app/assets/hero-background.svg')
+style: |
+  :root {
+    font-size: 1.75rem;  /* scale down everything */
+  }
 ---
 
 # **The Longest Path Problem**
@@ -15,18 +19,16 @@ backgroundImage: url('https://marp.app/assets/hero-background.svg')
 
 # Longest Path Problem
 
-- **Input**: Weighted graph G = (V, E, w) where w: E → ℝ⁺
+- **Input**: Weighted graph $G = (V, E, w)\ \text{where}\ w: E \to \mathbb{R}^{+}$
 - **Output**: A simple path P with maximum sum of edge weights
 
-**Optimization Version**: Given a weighted graph, find the simple path with
-maximum total weight.
+**Optimization Version (NP-Hard)**: Given a weighted graph, find the simple path with maximum total weight.
 
-**Descision Version (NP)**: Given a weighted graph, does a simple path of weight
-≥ k exist?
+**Descision Version (NP-Complete)**: Given a weighted graph, does a simple path of weight $\geq k$ exist?
 
 ---
 
-# Example Input and Output
+# Optimization Example
 
 **Input**:
 
@@ -58,121 +60,117 @@ v3 v7 20
 
 ---
 
-# Certificate Verification
+# Shortest vs Longest Path
 
-**Certificate**: A sequence of vertices P = [v₁, v₂, ..., vₘ] claimed to be a
-longest path
+Why can't we use a shortest path algorithm like Bellman-Ford (Polynomial) to solve Longest Path?
 
-**Verification Algorithm:**
+**Attempt #1 - Negate every weight**:
+Definitionally, Shortest Path is _not_ required to be simple, Longest Path _is_.
+
+- Bellman-Ford will stop if it encounters a negative weight cycle to prevent an infinite loop.
+- Even in the presence of a positive weight cycle, verticies in Longest Path can not be repeated and so it will never loop.
+
+**Note**: Allowing repeated veritices and positive weight cycle detection in Longest Path would make it polynomial. Conversely, requiring Shortest Path to be simple would make it NP-Hard.
+
+---
+
+# Shortest vs Longest Path
+
+Why can't we use a shortest path algorithm like Bellman-Ford (Polynomial) to solve Longest Path?
+
+**Attempt #2 - Use reciprocal weights**:
+This doesn't work either because the reciprocal of a sum is not equal to the sum of reciprocals (e.g. $\frac{1}{2 + 3} \neq \frac{1}{2} + \frac{1}{3}$)
+
+**Counter-Example**
+
+- Path A: $w_1 = 1, w_2 = 4$
+- Path B: $w_3 = 2, w_2 = 2$
+
+Longest Path: $(1 + 4) > (2 + 2) \therefore\ \text{Longest Path:}\ (w_1, w_2)$
+Shortest Path + Reciprocals: $(1 + \frac{1}{4}) > (\frac{1}{2} + \frac{1}{2}) \therefore\ \text{Longest Path:}\ (w_3, w_4)$
+
+---
+
+# NP (Certificate Verification)
+
+**Certificate**: A sequence of vertices P = [v₁, v₂, ..., vₘ] claimed to be a longest path
 
 ```python
 def verify_longest_path(G, certificate, k):
-    # Check 1: All vertices in certificate exist in G
+    # Check 1: O(|P|) - All vertices in certificate exist in G
     for v in certificate:
         if v not in G.vertices:
             return False
-    
-    # Check 2: All vertices in certificate are unique (simple path)
+
+    # Check 2: O(|P|) - All vertices in certificate are unique (simple path)
     if len(certificate) != len(set(certificate)):
         return False
 
+    # Check 3: O(|P|) - All consecutive pairs form edges in G
     total_weight = 0 # Accumulator
-
-    # Check 3: All consecutive pairs form edges in G
     for i in range(len(certificate) - 1):
         edge = G.get_edge(certificate[i], certificate[i+1])
-
         if edge is None: # Verify edge exists in graph
             return False
 
         total_weight += edge.weight
-    
-    # Check 4: Total path weight ≥ k
+
+    # Check 4: O(1) - Total path weight ≥ k
     return total_weight >= k
 ```
 
 ---
 
-# Verification Complexity
-
-**Runtime Analysis:**
-
-- Check 1: O(|P|) where |P| ≤ |V| - iterate through path
-- Check 2: O(|P|) - check each edge and sum weights (O(1) per edge)
-- Check 3: O(|P|) - convert to set and compare lengths
-- Check 4: O(1) - simple comparison
-
-**Total: O(|V|) - Polynomial in input size!**
-
-**Note**: We can verify that a given path is valid and compute its weight in
-polynomial time. This shows the problem is in NP (for the decision version).
-
----
-
-# NP-Hardness: Reduction from Hamiltonian Path
+# NP-Hardness
 
 **Hamiltonian Path Problem** (known NP-Complete):
 
-- Input: Graph G with n vertices
+- Input: Unweighted Graph $G = (V, E)$
 - Output: A path visiting every vertex exactly once (if it exists)
 
-**Reduction Strategy:** Hamiltonian Path ≤ₚ Longest Path (Optimization)
+**Reduction Strategy:** Hamiltonian Path $\leq_p$ Longest Path
 
-Given instance of Hamiltonian Path (graph G with n vertices):
-
-1. Use the same graph G as input to Longest Path
-2. Solve Longest Path to get optimal path P
-3. If |P| = n (path visits all vertices), return P as Hamiltonian path
-4. Otherwise, no Hamiltonian path exists
-
-**Key Insight:** In any graph, the longest simple path has n vertices ⟺
-Hamiltonian path exists
+If the Hamiltonian Path Poblem can be reduced to Longest Path in polynomial time, then the Longest Path problem is also NP-Hard.
 
 ---
 
-# Reduction Example: Hamiltonian Path → Longest Path
+# Reduction
 
-**Original Hamiltonian Path Instance:**
+**Reduce Hamiltonian Path → Longest Path in polynomial time:**
 
-```
-1 --- 2 --- 3
-|           |
-4 --- 5 --- 6
-```
+Assign every edge in the graph a weight of 1.
+$G = (V, E) \to G = (V, E, w)\ \text{where}\ w: E \to 1$. $O(|E|)$
 
-Question: Find Hamiltonian path (if exists)
+**Reframe decision:**
 
-**Apply Longest Path Algorithm:**
+Does a path of total weight $\geq |V| - 1$ exist?
 
-- Input: Same graph G
-- Output: Path [1, 2, 3, 6, 5, 4] with 6 vertices
-- Since path uses all 6 vertices → this IS a Hamiltonian path ✓
-
-**If no Hamiltonian path existed:**
-
-- Longest path would have < 6 vertices
-- We'd return "No Hamiltonian path"
+- If YES, then the path found by Longest Path is a Hamiltonian path.
+- If NO, then no Hamiltonian Path exists.
 
 ---
 
 # Reduction Correctness
 
-**Forward (⇒):** If G has Hamiltonian path H of n vertices:
+**Forward (⇒):** If $G$ has Hamiltonian path $P$:
 
-- H visits all n vertices exactly once
-- Any longest path must have ≤ n vertices (can't exceed total)
-- Therefore longest path has exactly n vertices
-- Longest Path algorithm will find a path of length n ✓
+- $P$ visits all vertices exactly once
+- $P$ uses exactly $|V| - 1$ edges.
+- All edges have weight 1 so the total weight of $P$ is $|V| - 1$
+- Thus there exists a simple path of total weight $\geq |V| - 1$, so Longest Path answers YES ✓
 
-**Backward (⇐):** If Longest Path returns path P with n vertices:
+---
 
-- P is simple (no repeated vertices)
-- P has n vertices in a graph with n total vertices
-- Therefore P visits every vertex exactly once
-- P is a Hamiltonian path ✓
+# Reduction Correctness
 
-**Polynomial Time:** Reduction takes O(1) - just run algorithm and check path
-length Since Hamiltonian Path is NP-Complete, Longest Path is NP-Hard!
+**Backward (⇐):** If Longest Path returns path $P$ of weight $\geq |V| - 1$:
+
+- $P$ is simple (no repeated vertices)
+- $P$ uses exactly $|V|$ vertices in a graph with $|V|$ total vertices
+- Therefore $P$ visits every vertex exactly once
+- $P$ is a Hamiltonian path ✓
+
+**Conclusion:** Reduction runs in polynomial time, therefore, because Hamiltonian Path is NP-Complete, Longest Path is NP-Hard
 
 ---
 
@@ -182,31 +180,31 @@ length Since Hamiltonian Path is NP-Complete, Longest Path is NP-Hard!
 def longest_path(
     n: int, graph: dict[int, dict[int, float]]
 ) -> tuple[list[int], float]:
-    
+
     def recurse(
         start: int, weight: float, visited: list[bool]
     ) -> tuple[list[int], float]:
         visited[start] = True
         if start not in graph:
             return ([start], weight)
-        
+
         best_path: list[int] = [start]
         best_weight: float = weight
-        
+
         for adj in graph[start].keys():
             if visited[adj]:
                 continue
             # DOMINANT OPERATION: Recursive exploration
             res = recurse(adj, weight + graph[start][adj], visited)
             visited[adj] = False
-            
+
             new_path, new_weight = res
             if new_weight > best_weight:
                 best_weight = new_weight
                 best_path = [start, *new_path]
-        
+
         return (best_path, best_weight)
-    
+
     # Try starting from each vertex
     return reduce(
         lambda x, y: x if x[1] > y[1] else y,
@@ -236,8 +234,7 @@ def longest_path(
 
 **Space Complexity:** O(n) for recursion stack and visited array
 
-This factorial runtime is the dominant term and confirms the exponential nature
-of the problem!
+This factorial runtime is the dominant term and confirms the exponential nature of the problem!
 
 ---
 
@@ -261,46 +258,7 @@ of the problem!
 
 ---
 
-# Runtime Growth Visualization
-
-```
-Runtime (seconds)
-    150 |                                          *
-        |
-    100 |
-        |
-     50 |
-        |
-     10 |                                    *
-      1 |                          *
-        |                    *
-    0.1 |              *
-        |        *  *
-   0.01 |  *  *
-        |_______________________________________________
-          4   5   6   7   8   9   10    Input Size (n)
-
-Growth Pattern: Factorial (n!)
-Each increment multiplies runtime by approximately n
-```
-
----
-
-# Complexity Summary
-
-**Problem Class:** NP-Complete (Optimization version is NP-Hard)
-
-**Why NP-Hard?**
-
-- Reduction from Hamiltonian Path in O(1) time ✓
-- Reduction is polynomial and correctness proven ✓
-
-**Practical Implications:**
-
-- No known polynomial-time algorithm
-- Backtracking solution: O(n! × |E|)
-- Infeasible for large graphs (n > 20)
-- Approximation algorithms needed for practical use
+![bg 90%](./assets/exact-solution-graph.png)
 
 ---
 
