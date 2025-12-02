@@ -8,6 +8,7 @@
   packages = with pkgs; [
     git
     raylib
+    marp-cli
   ];
 
   # https://devenv.sh/languages/
