@@ -18,46 +18,55 @@ The algorithm combines **three major ideas**:
 
 # Greedy Construction (Pseudocode)
 
-```
-function GREEDY_STEP(G, current, visited):
-    candidates = neighbors(current) \ visited
-    if candidates is empty:
-        return NONE
+``` python
+def greedy_step(G, current, visited):
+    # All neighbors not yet visited
+    candidates = [v for v in G[current] if v not in visited]
+    if not candidates:
+        return None
 
-    score(v) = (degree(v), unvisited_neighbors(v))
-    return argmax(score(v)) over candidates
+    def score(v):
+        deg = len(G[v]) # degree(v)
+        unvisited = sum(1 for u in G[v] if u not in visited)
+        return (deg, unvisited)
+
+    # Pick the candidate with maximum score
+    return max(candidates, key=score)
+
 ```
 
 ---
 
 # Randomized Escape (Pseudocode)
 
-```
-function RANDOM_ESCAPE(G, current):
-    if random() < JUMP_PROB:
-        return random_unvisited_vertex(G)
+``` python
+def random_escape(G, current, visited, JUMP_PROB):
+    if random.random() < JUMP_PROB:
+        unvisited = [v for v in G if v not in visited]
+        return random.choice(unvisited) if unvisited else None
 
-    neighbors = neighbors(current)
-    return random_element(neighbors)
+    nbrs = list(G[current])
+    return random.choice(nbrs) if nbrs else None
+
 ```
 
 ---
 
 # Random Walking (Pseudocode)
 
-```
-function RANDOM_WALK(G, start, max_steps):
+``` python
+def random_walk(G, start, max_steps):
     path = [start]
     current = start
 
-    for i in 1..max_steps:
-        neighbors = neighbors(current)
-        if neighbors is empty:
+    for _ in range(max_steps):
+        nbrs = list(G[current])
+        if not nbrs:
             break
 
-        next = random_element(neighbors)
-        path.append(next)
-        current = next
+        nxt = random.choice(nbrs)
+        path.append(nxt)
+        current = nxt
 
     return path
 ```
