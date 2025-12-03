@@ -111,7 +111,7 @@ static float random_walk(graph *g, size_t *current, int *visited, size_t *path, 
         total += chosen->weight;
         *current = chosen->to;
         visited[*current] = 1;
-        path[(*len)++] = *current;    
+        path[(*len)++] = *current;
     }
 
     free(candidates);
