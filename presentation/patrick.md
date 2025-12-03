@@ -117,7 +117,7 @@ The algorithm has **two main components**:
 Use a **Maximum Spanning Tree**:
 - A spanning tree connects all n vertices using exactly n-1 edges
 - An MST is the spanning tree with maximum total weight among all trees
-- The **Longest Simple path Weight <= Maximum Spanning Tree Weight**
+- The **Longest Simple Path Weight <= Maximum Spanning Tree Weight**
 
 ---
 
@@ -128,7 +128,7 @@ Use a **Maximum Spanning Tree**:
 
 - Calculated upper bound using **Maximum Spanning Tree**
 - Randomness can cause worse results even with more runtime
-- Less improvements after after 30 seconds
+- Less improvements after 30 seconds
 
 ---
 
