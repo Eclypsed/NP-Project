@@ -9,120 +9,114 @@ backgroundImage: url('https://marp.app/assets/hero-background.svg')
 
 # High-Level Approximation Strategy
 
-The algorithm combines **three major ideas**:
-1. Greedy Construction  
-2. Randomized Escape  
-3. Anytime / Multi-Start Search  
+The algorithm combines **two major ideas**:
+1. Greedy 
+2. Random Exploration 
 
 ---
 
-# Greedy Construction (Pseudocode)
+# Greedy Construction
 
 ``` python
-def greedy_step(G, current, visited):
-    # All neighbors not yet visited
+def GREEDY_STEP(G, current, visited):
+    # All neighbors of current that are not yet visited
     candidates = [v for v in G[current] if v not in visited]
     if not candidates:
         return None
 
-    def score(v):
-        deg = len(G[v]) # degree(v)
-        unvisited = sum(1 for u in G[v] if u not in visited)
-        return (deg, unvisited)
+    # Score(v): degree + number of unvisited neighbors
+    def SCORE(v):
+        degree = len(G[v])
+        unseen = sum(1 for u in G[v] if u not in visited)
+        return (degree, unseen)
 
-    # Pick the candidate with maximum score
-    return max(candidates, key=score)
+    # Return the candidate with maximum score
+    return max(candidates, key=SCORE)
 
 ```
 
 ---
 
-# Randomized Escape (Pseudocode)
+# Random Exploration
 
 ``` python
-def random_escape(G, current, visited, JUMP_PROB):
-    if random.random() < JUMP_PROB:
-        unvisited = [v for v in G if v not in visited]
-        return random.choice(unvisited) if unvisited else None
+def RANDOM_EXPLORE(G, current, visited, JUMP_PROB):
+    r = random.random()      # number in [0, 1)
 
-    nbrs = list(G[current])
-    return random.choice(nbrs) if nbrs else None
+    # With probability JUMP_PROB, explore randomly
+    if r < JUMP_PROB:
+        candidates = [v for v in G[current] if v not in visited]
+        if not candidates:
+            return None
+        return random.choice(candidates)
 
+    # Otherwise, follow greedy rule
+    return GREEDY_STEP(G, current, visited)
 ```
 
 ---
 
-# Random Walking (Pseudocode)
+# Runtime Analysis of `sample_path`
 
-``` python
-def random_walk(G, start, max_steps):
-    path = [start]
-    current = start
+We analyze the worst-case runtime of one greedy + random-jump path.
 
-    for _ in range(max_steps):
-        nbrs = list(G[current])
-        if not nbrs:
-            break
-
-        nxt = random.choice(nbrs)
-        path.append(nxt)
-        current = nxt
-
-    return path
-```
+The graph is stored with adjacency lists,
+so scanning neighbors depends on the number of edges.
 
 ---
 
-# Runtime Analysis of `sample_path` (Single Iteration)
-
-We analyze the **worst‑case time complexity** of one call to:
-
-```
-sample_path(graph, n, start)
-```
-
-Let:
-
-- **V = number of vertices**
-- **E = number of edges**
-
----
-
-## Greedy Phase
+## Greedy Phase (with Random Jumps)
 
 At each step:
 
-- We scan all neighbors of the current vertex to extract unvisited ones  
-- Worst‑case per step: **degree(v)**  
-- Across entire run, every vertex is visited at most once → total neighbor scans:
+- Scan all neighbors of the current vertex → **O(degree(current))**
+- Filter unvisited neighbors
+- Pick best-weight or random-choice → **O(1)**
 
-### **O(deg(v)) = O(E)**
-
----
-
-## Random Walk Extension
-
-The random walk runs for **WALK_STEPS**, which is a constant:
-Each of the vertices gathers unvisited neighbors **O(E)**
-
-### **O(1 + E) = O(E)**
+Each vertex becomes `current` at most once,
+so each edge is scanned at most **twice**.
 
 ---
 
-# Overall Worst-Case Runtime
+## Overall Worst-Case Runtime
 
-`T_sample(V, E) = O(E) + O(E) = O(E)`
+Total neighbor scanning:
 
-Since edges dominate, a single sampled greedy+random-walk path runs in **linear time in the number of edges**.
+degree(v₁) + degree(v₂) + … + degree(vₙ)
+= **2E = O(E)**
+
+Thus:
+
+**T_sample(E) = O(E)**
+
+Each sampled path runs in  
+**linear time in the number of edges.**
 
 ---
-
-![bg contain](../approx_solution/assets/wallclock(python5sec)new.png)
-
---- 
-
-![bg contain](../approx_solution/assets/wallclock(rust1sec)new.png)
+![bg right:100% 100%](../approx_solution/assets/wallclock(python5sec)new.png)
+![bg left:100% 100%](../approx_solution/assets/wallclock(rust1sec)new.png)
 
 ---
 
 ![bg contain](../approx_solution/assets/results.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_001s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_01s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_1s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_1s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_5s_finalcolors.png)
+
