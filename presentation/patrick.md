@@ -123,8 +123,8 @@ Use a **Maximum Spanning Tree**:
 
 # Patricks Runtime VS Alstons  Runtime
 
-<img src="assets/patricks_runtimes.png" alt="Image 1" width="550" style="display:inline-block;"/>
-<img src="assets/alstons_runtime.png" alt="Image 2" width="550" style="display:inline-block;"/>
+<img src="../approx_solution_two/assets/patricks_runtimes.png" alt="Image 1" width="550" style="display:inline-block;"/>
+<img src="../approx_solution_two/assets/alstons_runtime.png" alt="Image 2" width="550" style="display:inline-block;"/>
 
 - Calculated upper bound using **Maximum Spanning Tree**
 - Randomness can cause worse results even with more runtime
