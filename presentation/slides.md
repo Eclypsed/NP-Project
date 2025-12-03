@@ -303,7 +303,7 @@ Each sampled path runs in
 ---
 
 ![bg right:100% 100%](<../approx_solution/assets/wallclock(python5sec)new.png>)
-![bg left:100% 100%](<../approx_solution/assets/wallclock(rust1sec)new.png>)
+![bg left:100% 100%](<../approx_solution/assets/wallclock_rust.png>)
 
 ---
 
