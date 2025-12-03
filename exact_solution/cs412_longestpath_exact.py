@@ -35,7 +35,8 @@ def longest_path(
 
             if new_weight > best_weight:
                 best_weight = new_weight
-                best_path = [start, *new_path]
+                new_path.insert(0, start)
+                best_path = new_path
 
         return (best_path, best_weight)
 

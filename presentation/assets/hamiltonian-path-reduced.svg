@@ -1,0 +1,71 @@
+<svg width="1000.0" height="1000.0" xmlns="http://www.w3.org/2000/svg">
+
+    <circle cx="499.99997" cy="50.0" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="499.99997" y="50.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v2</text>
+
+    <circle cx="818.19806" cy="181.80194" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="818.19806" y="181.80194" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v1</text>
+
+    <circle cx="950.0" cy="500.0" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="950.0" y="500.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v3</text>
+
+    <circle cx="818.19806" cy="818.19806" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="818.19806" y="818.19806" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v4</text>
+
+    <circle cx="499.99997" cy="950.0" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="499.99997" y="950.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v5</text>
+
+    <circle cx="181.80194" cy="818.19806" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="181.80194" y="818.19806" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v6</text>
+
+    <circle cx="50.0" cy="500.00003" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="50.0" y="500.00003" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v7</text>
+
+    <circle cx="181.802" cy="181.8019" r="35.0" fill="#2ECC71" stroke="black"/>
+    <text x="181.802" y="181.8019" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="black" text-anchor="middle" dominant-baseline="central">v8</text>
+
+    <line x1="532.33575" y1="63.393917" x2="785.8623" y2="168.40802" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "659.099" y="115.90097" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="936.6061" y1="467.6642" x2="831.592" y2="214.13773" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "884.099" y="340.90097" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="804.80414" y1="785.8623" x2="513.3939" y2="82.335785" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "659.099" y="434.09906" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="499.99997" y1="915.0" x2="499.99997" y2="85.0" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "499.99997" y="500.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="195.19586" y1="785.8623" x2="486.60605" y2="82.335785" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "340.90094" y="434.09906" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="82.335785" y1="513.3939" x2="785.8623" y2="804.80414" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "434.09906" y="659.099" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="214.13779" y1="168.40797" x2="467.66418" y2="63.39392" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "340.901" y="115.90095" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="917.66425" y1="486.60608" x2="214.13779" y2="195.19582" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "565.901" y="340.90094" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="785.8623" y1="831.592" x2="532.33575" y2="936.6061" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "659.099" y="884.099" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="475.25122" y1="74.74874" x2="74.74873" y2="475.25128" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "274.99997" y="275.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="804.80414" y1="214.13773" x2="513.3939" y2="917.6642" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "659.099" y="565.90094" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="63.39392" y1="467.66425" x2="168.40808" y2="214.13768" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "115.901" y="340.90097" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="917.6642" y1="513.3939" x2="214.13773" y2="804.80414" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "565.90094" y="659.099" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="793.44934" y1="206.55067" x2="206.55067" y2="793.44934" stroke="#2ECC71" stroke-width="5.0"/>
+    <text x= "500.0" y="500.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+
+    <line x1="915.0" y1="500.0" x2="85.0" y2="500.00003" stroke="#4A4A4A" stroke-width="5.0"/>
+    <text x= "500.0" y="500.0" font-size="32.0px" font-family="DejaVu Sans, sans-serif" fill="blue" text-anchor="middle" dominant-baseline="central">1</text>
+</svg>

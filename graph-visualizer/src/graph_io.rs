@@ -204,29 +204,40 @@ fn path_highlighter<N, E, T: EdgeType>(
 
     let node_coloring = move |n: NodeIndex| {
         if vertices[n.index()] {
-            return "#0000ff".to_string();
+            return "#2ECC71".to_string();
         }
 
-        "#000000".to_string()
+        "#4A4A4A".to_string()
     };
 
     let edge_coloring = move |e: EdgeIndex| {
         if edges[e.index()] {
-            return "#0000ff".to_string();
+            return "#2ECC71".to_string();
         }
 
-        "#000000".to_string()
+        "#4A4A4A".to_string()
     };
 
     (node_coloring, edge_coloring)
 }
 
-pub fn draw_graph<N, E, T: EdgeType>(path: &[EdgeIndex], graph: &Graph<N, E, T>, filename: &str) {
+pub fn draw_graph<N: ToString, E: ToString, T: EdgeType>(
+    path: &[EdgeIndex],
+    graph: &Graph<N, E, T>,
+    filename: &str,
+) {
     let (node_coloring, edge_coloring) = path_highlighter(path, graph);
+
+    let node_labeler = |n: NodeIndex| graph[n].to_string();
+    let edge_labeler = |e: EdgeIndex| graph[e].to_string();
 
     // lp_030 gives a good visual
     let settings = SettingsBuilder::new()
-        .layout(Layout::Circular)
+        .layout(Layout::ForceDirected)
+        .node_radius(35.0)
+        .font_size(32.0)
+        .node_label_fn(node_labeler)
+        .edge_label_fn(edge_labeler)
         .edge_coloring_fn(edge_coloring)
         .node_coloring_fn(node_coloring)
         .build()
