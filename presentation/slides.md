@@ -218,3 +218,244 @@ This factorial runtime is the dominant term and confirms the exponential nature 
 ---
 
 ![bg 90%](./assets/exact-solution-graph.png)
+
+---
+
+# High-Level Approximation Strategy
+
+The algorithm combines **two major ideas**:
+
+1. Greedy
+2. Random Exploration
+
+---
+
+# Greedy Construction
+
+```python
+def GREEDY_STEP(G, current, visited):
+    # All neighbors of current that are not yet visited
+    candidates = [v for v in G[current] if v not in visited]
+    if not candidates:
+        return None
+
+    # Score(v): degree + number of unvisited neighbors
+    def SCORE(v):
+        degree = len(G[v])
+        unseen = sum(1 for u in G[v] if u not in visited)
+        return (degree, unseen)
+
+    # Return the candidate with maximum score
+    return max(candidates, key=SCORE)
+
+```
+
+---
+
+# Random Exploration
+
+```python
+def RANDOM_EXPLORE(G, current, visited, JUMP_PROB):
+    r = random.random()      # number in [0, 1)
+
+    # With probability JUMP_PROB, explore randomly
+    if r < JUMP_PROB:
+        candidates = [v for v in G[current] if v not in visited]
+        if not candidates:
+            return None
+        return random.choice(candidates)
+
+    # Otherwise, follow greedy rule
+    return GREEDY_STEP(G, current, visited)
+```
+
+---
+
+# Runtime Analysis of `sample_path`
+
+We analyze the worst-case runtime of one greedy + random-jump path.
+
+At each step:
+
+- Scan all neighbors of the current vertex → **O(degree(current))**
+- Filter unvisited neighbors
+- Pick best-weight or random-choice → **O(1)**
+
+Each vertex becomes `current` at most once,
+so each edge is scanned at most **twice**.
+
+---
+
+## Overall Worst-Case Runtime
+
+Total neighbor scanning:
+
+degree(v₁) + degree(v₂) + … + degree(vₙ)
+= **2E = O(E)**
+
+Thus:
+
+**T_sample(E) = O(E)**
+
+Each sampled path runs in  
+**linear time in the number of edges.**
+
+---
+
+![bg right:100% 100%](<../approx_solution/assets/wallclock(python5sec)new.png>)
+![bg left:100% 100%](<../approx_solution/assets/wallclock(rust1sec)new.png>)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_001s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_01s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_0_1s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_1s_finalcolors.png)
+
+---
+
+![bg contain](../approx_solution/assets/graph_time_5s_finalcolors.png)
+
+---
+
+# Anytime Approximation Strategy
+
+The algorithm has **two main components**:
+
+1. Greedy Top-k Selection
+2. Random Edge Selection
+
+---
+
+# Greedy Top-k Selection (Pseudocode)
+
+```python
+    # Only consider unvisited neighbors
+    candidates = [(neighbor, weight)
+                    for neighbor, weight in graph[current_vertex].items()
+                    if neighbor not in visited_vertices]
+
+    if not candidates:
+                break
+
+    # pick randomly from top-k heaviest using heapq.nlargest
+    top_k_candidates = heapq.nlargest(k, candidates, key=lambda x: x[1])
+    neighbor, weight = random.choice(top_k_candidates)
+
+    visited_vertices.add(neighbor)
+    current_path.append(neighbor)
+    current_weight += weight
+    current_vertex = neighbor
+
+```
+
+---
+
+# Random Edge Selection (Pseudocode)
+
+```python
+    # Only consider unvisited neighbors
+    candidates = [(neighbor, weight)
+                    for neighbor, weight in graph[current_vertex].items()
+                    if neighbor not in visited_vertices]
+
+    if not candidates:
+        break
+
+    # probability set to 0.3 by default
+    if random.random() <= probability:
+        neighbor, weight = random.choice(candidates)
+    else:
+        # pick heaviest neighbor in linear time using max
+        neighbor, weight = max(candidates, key=lambda x: x[1])
+
+    visited_vertices.add(neighbor)
+    current_path.append(neighbor)
+    current_weight += weight
+    current_vertex = neighbor
+
+```
+
+---
+
+# Runtime Analysis of the Algorithm
+
+**Let:**
+
+**n** = number of vertices
+
+**E** = number of edges
+
+**Δ** = max degree of a vertex
+
+---
+
+# Top-K Selection Runtime
+
+- **Per vertex iteration**:
+  - Scan neighbors: O(Δ) (Δ = degree of current vertex)
+  - Pick top-k using heapq.nlargest: O(Δ)
+  - Random choice from top-k: O(1)
+
+- **Total Runtime**:
+  - Worst-case O(Δ) = **O(E)**
+
+---
+
+# Random Edge Selection Runtime
+
+- **Per vertex iteration**:
+  - Scan neighbors: O(Δ)
+  - Random pick: O(1) or max by weight: O(Δ)
+
+- **Total Runtime**:
+  - Worst-case O(Δ) = **O(E)**
+
+---
+
+# Anytime Algorithm Total Runtime
+
+- Top-k Selection **O(E)** + Random Edge Selection **O(E)** = **O(E)**
+- Algorithm repeats these iterations until time limit is reached,
+- **Total Runtime Per Iteration:** O(E)
+
+- **Total Runtime:** unbounded (anytime nature)
+  - Can run as long as needed, producing progressively better solutions
+
+---
+
+# Calculating an Upper Bound
+
+Use a **Maximum Spanning Tree**:
+
+- A spanning tree connects all n vertices using exactly n-1 edges
+- An MST is the spanning tree with maximum total weight among all trees
+- The **Longest Simple Path Weight <= Maximum Spanning Tree Weight**
+
+---
+
+# Patrick's Runtime VS Alston's Runtime
+
+<img src="../approx_solution_two/assets/patricks_runtimes.png" alt="Image 1" width="550" style="display:inline-block;"/>
+<img src="../approx_solution_two/assets/alstons_runtime.png" alt="Image 2" width="550" style="display:inline-block;"/>
+
+- Calculated upper bound using **Maximum Spanning Tree**
+- Randomness can cause worse results even with more runtime
+- Less improvements after 30 seconds
+
+---
+
+![bg contain](../approx_solution_two/assets/patrick_nick.png)
+
+---
+
+![bg contain](../approx_solution_two/assets/patrick_nick_compare.png)
