@@ -6,7 +6,6 @@ import click
 type Graph = dict[int, dict[int, float]]
 
 JUMP_PROB = 0.15
-WALK_STEPS = 10
 
 
 def sample_path(graph: Graph, n: int, start: int) -> tuple[list[int], float]:
@@ -30,19 +29,6 @@ def sample_path(graph: Graph, n: int, start: int) -> tuple[list[int], float]:
         chosen = random.choice(unvisited if len(unvisited) > 1 and random.random() < JUMP_PROB else best)
         
         current, weight = chosen
-        visited[current] = True
-        path.append(current)
-        total += weight
-    
-    # Random walk extension
-    for _ in range(WALK_STEPS):
-        if current not in graph:
-            break
-        unvisited = [(to, w) for to, w in graph[current].items() if not visited[to]]
-        if not unvisited:
-            break
-        
-        current, weight = random.choice(unvisited)
         visited[current] = True
         path.append(current)
         total += weight

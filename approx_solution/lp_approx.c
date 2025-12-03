@@ -23,12 +23,10 @@ static inline char *shift(int *argc, char ***argv) {
 // DEFAULTS
 static double MAX_TIME = 60;
 static float JUMP_PROB = 0.15f;
-static int WALK_STEPS = 10;
 
 // Forward declarations
 static void collect_moves(graph *, size_t, int *, edge **, size_t *, edge **, size_t *);
 static edge *choose_edge(edge **, size_t, edge **, size_t);
-static float random_walk(graph *, size_t *, int *, size_t *, size_t *);
 static float sample_path(graph *, size_t, size_t *, size_t *);
 static void run_sim(graph *);
 void handle_args(int *, char ***);
@@ -36,6 +34,7 @@ void handle_args(int *, char ***);
 // Entry
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
     handle_args(&argc, &argv);
 
     graph *g = graph_read();
@@ -84,41 +83,7 @@ static edge *choose_edge(edge **neighbors, size_t neighbor_count, edge **best_ed
     return best_edges[prng() % best_edge_count];
 }
 
-// Extend the path by taking up to WALK_STEPS random unvisited neighbors after greedy gets stuck.
-static float random_walk(graph *g, size_t *current, int *visited, size_t *path, size_t *len)
-{
-    float total = 0.0f;
-    edge **candidates = (edge**) calloc(g->n, sizeof(edge*));
-    if (!candidates){
-        fprintf(stderr, "Failed to allocate candidates edge array in random_walk\n");
-        exit(1);
-    }
-
-    for (int step = 0; step < WALK_STEPS; step++) {
-
-        size_t candidate_count = 0;
-
-        for (edge *e = g->adj[*current]; e; e = e->next) {
-            if (!visited[e->to]) {
-                candidates[candidate_count++] = e;
-            }
-        }
-
-        if (candidate_count == 0) break;
-
-        edge *chosen = candidates[prng() % candidate_count];
-
-        total += chosen->weight;
-        *current = chosen->to;
-        visited[*current] = 1;
-        path[(*len)++] = *current;
-    }
-
-    free(candidates);
-    return total;
-}
-
-// Build a single randomized greedy path with jumps and a random-walk extension, returning its total weight.
+// Build a single randomized greedy path with jumps
 static float sample_path(graph *g, size_t start, size_t *path, size_t *out_len)
 {
     int *visited = calloc(g->n, sizeof(int));
@@ -159,9 +124,6 @@ static float sample_path(graph *g, size_t start, size_t *path, size_t *out_len)
         visited[current] = 1;
         path[len++] = current;
     }
-
-    // Extend with random walk
-    total += random_walk(g, &current, visited, path, &len);
 
     free(visited);
     free(neighbors);
