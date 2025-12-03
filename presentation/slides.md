@@ -98,6 +98,8 @@ def verify_longest_path(G, certificate, k):
 
 # NP-Hardness
 
+![bg right:33% 100%](./assets/hamiltonian-path.svg)
+
 **Hamiltonian Path Problem** (known NP-Complete):
 
 - Input: Unweighted Graph $G = (V, E)$
@@ -110,6 +112,8 @@ If the Hamiltonian Path Poblem can be reduced to Longest Path in polynomial time
 ---
 
 # Reduction
+
+![bg right:33% 100%](./assets/hamiltonian-path-reduced.svg)
 
 **Reduce Hamiltonian Path → Longest Path in polynomial time:**
 
@@ -214,15 +218,3 @@ This factorial runtime is the dominant term and confirms the exponential nature 
 ---
 
 ![bg 90%](./assets/exact-solution-graph.png)
-
----
-
-# Approximation 1
-
-Alston's Stuff
-
----
-
-# Approximation 2
-
-Patrick's Stuff
