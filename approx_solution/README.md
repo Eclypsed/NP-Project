@@ -84,13 +84,10 @@ This approximation solution uses a randomized greedy approach with three key com
 
 1. **Greedy Selection with Jumps**: At each step, preferentially choose the highest-weight unvisited edge, but with 15% probability make a random jump to any unvisited neighbor to escape local optima.
 
-2. **Random Walk Extension**: After the greedy phase gets stuck, perform up to 10 additional random steps to explore further.
-
 3. **Sampling**: Repeat the above process with random starting points for the specified time limit and keep the best path found.
 
 ### Parameters
 - `JUMP_PROB = 0.15` - Probability of making a random jump instead of greedy choice
-- `WALK_STEPS = 10` - Number of random walk steps after greedy phase
 - `MAX_TIME = 60` (default) - Maximum runtime in seconds
 
 ## Test Cases
